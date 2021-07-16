@@ -12,6 +12,7 @@ Fields that hold random numbers.
 from __future__ import absolute_import
 import copy
 import random
+from scapy.error import warning
 import time
 import math
 import re
@@ -193,6 +194,12 @@ class _RandNumeral(RandField):
 
     def __ror__(self, other):
         return other | self._fix()
+    
+    def __even__(self):
+        return self._fix()//2*2
+    
+    def __odd__(self):
+        return self._fix()//2*2+1
 
 
 class RandNum(_RandNumeral):
@@ -281,6 +288,10 @@ class RandEnum(RandNum):
 
 
 class RandByte(RandNum):
+    def __init__(self):
+        RandNum.__init__(self, 0, 2**8 - 1)
+
+class RandEvenByte(RandNum):
     def __init__(self):
         RandNum.__init__(self, 0, 2**8 - 1)
 
@@ -474,26 +485,43 @@ class RandIP(RandString):
 
 
 class RandMAC(RandString):
-    def __init__(self, template="*"):
+    def __init__(self, template="*", unicast=False):
         RandString.__init__(self)
         self._template = template
         template += ":*:*:*:*:*"
         template = template.split(":")
+        self._unicast = unicast
         self.mac = ()
         for i in range(6):
             if template[i] == "*":
-                v = RandByte()
+                if (unicast and i == 0):
+                    v = RandByte().__even__()
+                else:
+                    v = RandByte()
             elif "-" in template[i]:
                 x, y = template[i].split("-")
-                v = RandNum(int(x, 16), int(y, 16))
+                if (unicast and i == 0 and x < y):
+                        v = RandNum(int(x, 16)+1, int(y, 16)).__even__()
+                else:
+                    if (unicast and x == y and int(x,16) % 2 == 1):
+                            warning("Given template creates not an unicast mac address.")
+                    v = RandNum(int(x, 16), int(y, 16))
             else:
+                if (unicast and i == 0 and int(template[i],16) % 2 == 1):
+                    warning("Given template creates not an unicast mac address.")
                 v = int(template[i], 16)
             self.mac += (v,)
 
     def _command_args(self):
+        ret = []
         if self._template == "*":
-            return ""
-        return "template=%r" % self._template
+            pass
+        else:
+            ret.append("template=%r" % self._template)
+        if self._unicast is True:
+            ret.append("unicast=%r" % self._unicast)
+        return ", ".join(ret)
+
 
     def _fix(self):
         return "%02x:%02x:%02x:%02x:%02x:%02x" % self.mac

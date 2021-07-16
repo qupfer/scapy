@@ -37,6 +37,33 @@ rm = RandMAC("00:01:02:03:04:0-7")
 assert(rm == ("00:01:02:03:04:05" if six.PY2 else "00:01:02:03:04:01"))
 assert(rm.command() == "RandMAC(template='00:01:02:03:04:0-7')")
 
+rm = RandMAC(unicast=True)
+assert(rm == ("f4:10:91:9e:44:0c" if six.PY2 else "e2:b8:88:19:ff:73"))
+assert(rm.command() == "RandMAC(unicast=True)")
+
+rm = RandMAC("0A-0F:01:02:03:04:0-7",unicast=True)
+assert(rm == ("0c:01:02:03:04:01" if six.PY2 else "0c:01:02:03:04:02"))
+assert(rm.command() == "RandMAC(template='0A-0F:01:02:03:04:0-7', unicast=True)")
+
+rm = RandMAC("10-11:22:33:44:55:66",unicast=True)
+assert(rm == ("10:22:33:44:55:66"))
+assert(rm.command() == "RandMAC(template='10-11:22:33:44:55:66', unicast=True)")
+
+rm = RandMAC("11-11:22:33:44:55:66",unicast=True)
+assert(rm == ("11:22:33:44:55:66"))
+assert(rm.command() == "RandMAC(template='11-11:22:33:44:55:66', unicast=True)")
+
+rm = RandMAC("11-12:22:33:44:55:66",unicast=True)
+assert(rm == ("12:22:33:44:55:66"))
+assert(rm.command() == "RandMAC(template='11-12:22:33:44:55:66', unicast=True)")
+
+rm = RandMAC("11:22:33:44:55:66",unicast=True)
+assert(rm == ("11:22:33:44:55:66"))
+assert(rm.command() == "RandMAC(template='11:22:33:44:55:66', unicast=True)")
+
+rm = RandMAC("12:22:33:44:55:66",unicast=True)
+assert(rm == ("12:22:33:44:55:66"))
+assert(rm.command() == "RandMAC(template='12:22:33:44:55:66', unicast=True)")
 
 = RandOID
 
